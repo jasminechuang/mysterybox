@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>廢土荒謬傭兵盲盒：末日生存轉蛋所</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; }
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(234, 179, 8, 0.5); }
+            50% { box-shadow: 0 0 30px rgba(234, 179, 8, 0.9); }
+        .ssr-glow { animation: glow 1.5s infinite; }
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center p-4">
+
+    <!-- 遊戲外框容器 -->
+    <div class="w-full max-w-md bg-slate-900 rounded-2xl shadow-2xl border border-slate-800 overflow-hidden flex flex-col min-h-[600px]">
+        
+        <!-- 頂部資源列 -->
+        <div class="bg-slate-900/90 border-b border-slate-800 p-4 flex justify-between items-center sticky top-0 z-10 backdrop-blur">
+            <div class="flex items-center gap-2">
+                <span class="text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-1 rounded-md font-bold">🎫 轉蛋券: <span id="token-count">3</span></span>
+                <span class="text-xs bg-slate-800 text-slate-300 border border-slate-700 px-2 py-1 rounded-md">🔩 金屬: <span id="scrap-count">0</span></span>
+            </div>
+            <div class="text-xs text-slate-400">生存第 <span id="day-count" class="text-amber-400 font-bold">1</span> 天</div>
+        </div>
+
+        <!-- 導覽頁籤 -->
+        <div class="grid grid-cols-3 bg-slate-950 border-b border-slate-800 text-center text-xs font-bold">
+            <button onclick="switchTab('supply')" id="tab-supply" class="py-3 text-amber-400 border-b-2 border-amber-400 transition">📦 每日補給</button>
+            <button onclick="switchTab('gacha')" id="tab-gacha" class="py-3 text-slate-400 hover:text-slate-200 transition">🎰 荒謬轉蛋</button>
+            <button onclick="switchTab('roster')" id="tab-roster" class="py-3 text-slate-400 hover:text-slate-200 transition">📜 傭兵圖鑑 (<span id="roster-count">0</span>)</button>
+        </div>
+
+        <!-- 內容區域 -->
+        <div class="p-5 flex-1 flex flex-col justify-between">
+
+            <!-- 頁籤一：每日補給箱 -->
+            <div id="section-supply" class="space-y-6 text-center my-auto">
+                <div class="space-y-2">
+                    <div class="text-6xl animate-bounce inline-block">📦</div>
+                    <h2 class="text-xl font-black text-amber-400">廢土物資補給箱</h2>
+                    <p class="text-xs text-slate-400">每天打開可以獲得生存物資與珍貴的轉蛋券！</p>
+                </div>
+                
+                <div id="supply-result" class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-sm min-h-[70px] flex items-center justify-center text-slate-300">
+                    點擊下方按鈕領取今天的末日補給品！
+                </div>
+
+                <button id="claim-btn" onclick="claimSupply()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-amber-900/30 cursor-pointer">
+                    開啟今日補給箱 🎁
+                </button>
+            </div>
+
+            <!-- 頁籤二：荒謬轉蛋機 -->
+            <div id="section-gacha" class="hidden space-y-6 text-center my-auto">
+                <div class="space-y-2">
+                    <div class="text-6xl inline-block animate-pulse">🎰</div>
+                    <h2 class="text-xl font-black text-amber-400">荒謬傭兵扭蛋機</h2>
+                    <p class="text-xs text-slate-400">消耗 1 張轉蛋券，召喚毫無邏輯的末日冒險者！</p>
+                </div>
+
+                <!-- 抽卡結果展示區 -->
+                <div id="gacha-card-box" class="hidden bg-slate-950 p-4 rounded-xl border border-slate-700 text-left space-y-2 relative overflow-hidden">
+                    <div id="card-rarity" class="text-xs font-bold px-2 py-0.5 rounded inline-block">SSR</div>
+                    <h3 id="card-title" class="text-base font-black text-amber-300"></h3>
+                    <div class="text-xs space-y-1 text-slate-300">
+                        <p>🧬 種族：<span id="card-race" class="text-white"></span></p>
+                        <p>💼 職業：<span id="card-job" class="text-white"></span></p>
+                        <p>⚔️ 專武：<span id="card-weapon" class="text-white"></span></p>
+                        <p>✨ 特技：<span id="card-skill" class="text-amber-400 font-bold"></span></p>
+                    </div>
+                </div>
+
+                <button onclick="pullGacha()" class="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-orange-900/40 cursor-pointer">
+                    單抽一次 (消耗 1 🎫)
+                </button>
+            </div>
+
+            <!-- 頁籤三：傭兵圖鑑 -->
+            <div id="section-roster" class="hidden space-y-4">
+                <h2 class="text-sm font-bold text-slate-400">已收容的荒謬傭兵：</h2>
+                <div id="roster-list" class="space-y-2 max-h-[380px] overflow-y-auto pr-1">
+                    <div class="text-center py-12 text-slate-600 text-xs italic">尚未招募任何傭兵，快去轉蛋機試試手氣！</div>
+                </div>
+            </div>
+
+            <!-- 底部訊息回饋 -->
+            <div id="toast" class="hidden mt-4 bg-slate-800 border border-slate-700 text-slate-200 text-xs p-2.5 rounded-lg text-center transition"></div>
+
+        </div>
+    </div>
+
+    <script>
+        // 遊戲狀態與資料
+        let gameState = {
+            tokens: 3,
+            scrap: 10,
+            days: 1,
+            lastClaimDate: null,
+            roster: []
+        };
+
+        // 載入存檔
+        function loadGame() {
+            const saved = localStorage.getItem('wasteland_gacha_save');
+            if (saved) {
+                try { gameState = JSON.parse(saved); } catch(e) {}
+            }
+            updateUI();
+        }
+
+        // 儲存進度
+        function saveGame() {
+            localStorage.setItem('wasteland_gacha_save', JSON.stringify(gameState));
+            updateUI();
+        }
+
+        function updateUI() {
+            document.getElementById('token-count').textContent = gameState.tokens;
+            document.getElementById('scrap-count').textContent = gameState.scrap;
+            document.getElementById('day-count').textContent = gameState.days;
+            document.getElementById('roster-count').textContent = gameState.roster.length;
+            renderRoster();
+        }
+
+        // 切換頁籤
+        function switchTab(tab) {
+            ['supply', 'gacha', 'roster'].forEach(t => {
+                document.getElementById(`section-${t}`).classList.add('hidden');
+                document.getElementById(`tab-${t}`).className = "py-3 text-slate-400 hover:text-slate-200 transition";
+            });
+            document.getElementById(`section-${tab}`).classList.remove('hidden');
+            document.getElementById(`tab-${tab}`).className = "py-3 text-amber-400 border-b-2 border-amber-400 transition";
+        }
+
+        // 每日補給領取
+        function claimSupply() {
+            const today = new Date().toDateString();
+            if (gameState.lastClaimDate === today) {
+                showToast("今天已經領取過補給箱囉！請明天再來。");
+                return;
+            }
+
+            gameState.lastClaimDate = today;
+            gameState.tokens += 2;
+            gameState.scrap += 15;
+            gameState.days += 1;
+            saveGame();
+
+            document.getElementById('supply-result').innerHTML = `
+                <p class="text-emerald-400 font-bold mb-1">🎉 補給成功！</p>
+                <p class="text-xs text-slate-300">獲得 <span class="text-amber-400 font-bold">+2 張轉蛋券</span>、<span class="text-white font-bold">+15 金屬廢料</span></p>
+            `;
+            showToast("成功開啟今日補給箱！");
+        }
+
+        // 荒謬特質資料庫
+        const races = ["突變系中二生", "廢土流浪大媽", "失憶外星觀光客", "覺醒AI掃地機器人", "核子輻射橘貓", "野生工程師"];
+        const jobs = ["撿破爛王者", "精神病院長", "氣象武器操作員", "路邊攤大廚", "末日哲學家", "量子槓精"];
+        const weapons = ["壞掉的平底鍋", "充滿輻射的保溫瓶", "貼滿符咒的鍵盤", "傳說級塑膠袋", "生鏽的折疊腳踏車", "未爆彈抱枕"];
+        const skills = [
+            "特技：原地發呆 3 秒讓敵人精神錯亂",
+            "特技：隨時隨地大喊退散並毫無效果",
+            "特技：用無限邏輯把喪屍講到自閉",
+            "特技：拿平底鍋敲擊自己增加防禦力",
+            "特技：召喚過期泡菜湯進行化學攻擊"
+        ];
+
+        function getRandomItem(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        // 抽卡邏輯
+        function pullGacha() {
+            if (gameState.tokens < 1) {
+                showToast("轉蛋券不足！請去「每日補給」領取更多物資。");
+                return;
+            }
+
+            gameState.tokens -= 1;
+            saveGame();
+
+            // 決定稀有度 (SSR 10%, SR 30%, R 60%)
+            const rand = Math.random();
+            let rarity = "R";
+            let colorClass = "bg-slate-800 text-slate-300 border-slate-700";
+            if (rand < 0.1) {
+                rarity = "SSR";
+                colorClass = "bg-amber-500/20 text-amber-300 border-amber-500 ssr-glow";
+            } else if (rand < 0.4) {
+                rarity = "SR";
+                colorClass = "bg-purple-500/20 text-purple-300 border-purple-500";
+            }
+
+            const merc = {
+                id: Date.now(),
+                rarity: rarity,
+                race: getRandomItem(races),
+                job: getRandomItem(jobs),
+                weapon: getRandomItem(weapons),
+                skill: getRandomItem(skills)
+            };
+
+            gameState.roster.unshift(merc);
+            saveGame();
+
+            // 顯示抽卡結果
+            const cardBox = document.getElementById('gacha-card-box');
+            cardBox.className = `p-4 rounded-xl border text-left space-y-2 relative overflow-hidden ${colorClass}`;
+            document.getElementById('card-rarity').textContent = `${rarity} 級荒謬傭兵`;
+            document.getElementById('card-rarity').className = `text-xs font-bold px-2 py-0.5 rounded inline-block ${rarity === 'SSR' ? 'bg-amber-500 text-slate-950' : rarity === 'SR' ? 'bg-purple-500 text-white' : 'bg-slate-700 text-slate-300'}`;
+            document.getElementById('card-title').textContent = `${merc.race}・${merc.job}`;
+            document.getElementById('card-race').textContent = merc.race;
+            document.getElementById('card-job').textContent = merc.job;
+            document.getElementById('card-weapon').textContent = merc.weapon;
+            document.getElementById('card-skill').textContent = merc.skill;
+            cardBox.classList.remove('hidden');
+
+            showToast(`成功召喚 ${rarity} 級傭兵！`);
+        }
+
+        // 渲染圖鑑清單
+        function renderRoster() {
+            const listEl = document.getElementById('roster-list');
+            if (gameState.roster.length === 0) {
+                listEl.innerHTML = `<div class="text-center py-12 text-slate-600 text-xs italic">尚未招募任何傭兵，快去轉蛋機試試手氣！</div>`;
+                return;
+            }
+
+            listEl.innerHTML = gameState.roster.map(m => `
+                <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl flex justify-between items-center text-xs">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${m.rarity === 'SSR' ? 'bg-amber-500 text-slate-950' : m.rarity === 'SR' ? 'bg-purple-500 text-white' : 'bg-slate-800 text-slate-400'}">${m.rarity}</span>
+                            <span class="font-bold text-slate-200">${m.race}・${m.job}</span>
+                        </div>
+                        <p class="text-slate-400 text-[11px]">專武: ${m.weapon} | ${m.skill}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+
+        // 初始化
+        loadGame();
+    </script>
+</body>
+</html>
