@@ -9,7 +9,7 @@
 * **荒謬轉蛋**：消耗轉蛋券來抽取各式各樣奇葩又有趣的廢土傭兵。
 * **傭兵圖鑑**：收集並解鎖你抽到的所有荒謬傭兵。
 
-##線上預覽
+## 線上預覽
 
 你可以在 GitHub Pages 上直接體驗本專案：
 [https://jasminechuang.github.io/mysterybox/](https://jasminechuang.github.io/mysterybox/)
